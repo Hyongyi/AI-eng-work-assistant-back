@@ -4,21 +4,31 @@ import config as config
 
 # Groq 클라이언트 초기화
 client = Groq(
-    api_key=Gconfig.API_KEY
+    api_key=config.API_KEY
 )
 
-prompt = f"다음의 문장을 문법적으로 맞게 고치고 어디가 어떻게 틀렸는지 한국어로 설명해줘. 한자는 쓰지 말아줘.{sentence}"
+# Prompt 템플릿을 변수로 정의
+correct_grammar_template = "당신은 영어 선생님으로 당신의 직무는 영어를 배우는 학생들을 가르치고 올바른 영어를 사용할 수 있게 도와주는 선생님입니다. 학생들은 한국인이기에 무조건 한국말을 사용해야 합니다. 한국어 외에 다른 언어가 들어오면 한국 학생들은 더이상 수업에 나오지 않을 겁니다. 다른 언어를 사용하지 않도록 주의하세요. 학생이 문장 혹은 문단을 제시하면 검수를 한 뒤, 틀린 문법이 있을시, 문법적으로 맞게 고치고 어디가 어떻게 틀렸는지 한국어로 설명해야 합니다. 다음은 학생이 너에게 검수를 요청하는 내용입니다.\n {sentence} \n 다음 내용을 검수하고 틀린 부분이 있으면 문법 위주로 설명해주세요."
 
-# API 호출
-chat_completion = client.chat.completions.create(
-    messages=[
-        {
-            "role": "user",
-            "content": prompt,
-        }
-    ],
-    model="llama-3.1-70b-versatile",
-)
+description_template = "당신은 영어 선생님으로 당신의 직무는 영어를 배우는 학생들을 가르치고 올바른 영어를 사용할 수 있게 도와주는 선생님입니다. 학생들은 한국인이기에 무조건 한국말을 사용해야 합니다. 한국어 외에 다른 언어가 들어오면 한국 학생들은 더이상 수업에 나오지 않을 겁니다. 학생이 영어로 된 문장 혹은 문단을 제시하면 너는 이 문장을 분석해서 간결하게 설명해주어야 합니다. 간결하게 설명하되, 내용이 누락되면 안됩니다. 다음은 학생이 당신에게 물어보는 내용입니다.\n {sentence} \n 다음 내용을 분석한뒤, 요약하여 전달해주세요."
 
-# 응답 출력
-print(chat_completion.choices[0].message.content)
+def call_Groq_api(prompt):
+    response = client.chat.completions.create(
+        messages=[
+            {
+                "role": "user",
+                "content": prompt,
+            }
+        ],
+        model=config.LLM_MODEL,
+    )
+    
+    return response.choices[0].message.content
+
+def prompt_format(prompt, sentence):
+    prompt_template = prompt.format(sentence=sentence)
+    return call_Groq_api(prompt)
+
+# 사용 예시
+print(prompt_format(correct_grammar_template, "i name is Austin"))
+print(prompt_format(description_template, "I love programming"))
