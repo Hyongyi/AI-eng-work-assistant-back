@@ -25,6 +25,7 @@ def call_Groq_api(prompt):
         model=config.LLM_MODEL,
     )
     
+    
     return response.choices[0].message.content
 
 def prompt_format(prompt, sentence):
