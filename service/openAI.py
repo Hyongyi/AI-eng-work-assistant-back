@@ -2,8 +2,6 @@ import os
 from groq import Groq
 import config as config
 
-
-
 # Groq 클라이언트 초기화
 client = Groq(
     api_key=config.API_KEY
