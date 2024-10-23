@@ -8,7 +8,6 @@ from typing import AsyncIterable
 
 router = APIRouter()
 
-
 class PromptRequest(BaseModel):
     promptTemplate: str
     sentence: str
