@@ -6,7 +6,6 @@ import config as config
 from fastapi.responses import StreamingResponse
 from typing import AsyncIterable
 
-
 router = APIRouter()
 
 class PromptRequest(BaseModel):
