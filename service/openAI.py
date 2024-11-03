@@ -93,10 +93,13 @@ async def call_Groq_api(prompt: str) -> AsyncIterator[str]:
 
     content = response.choices[0].message.content
     
-    # 결과를 청크로 나눠서 반환 (예: 줄 바꿈 기준)
-    for chunk in content.split():  # 필요에 따라 다른 기준으로 나누기
-        await asyncio.sleep(0.1)  # 비동기 대기 (선택사항)
-        yield chunk
+    # 결과를 청크로 나누기 (공백 및 줄 바꿈 기준으로)
+    chunks = re.split(r'(\s+)', content)  # 공백 및 줄 바꿈을 기준으로 분리
+    
+    for chunk in chunks:
+        if chunk:  # 비어 있지 않은 청크만 처리
+            await asyncio.sleep(0.01)  # 비동기 대기 (선택사항)
+            yield chunk
 
 def prompt_format(prompt: str, sentence: str) -> str:
     # 문장에 맞게 프롬프트를 형식화
