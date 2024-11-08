@@ -3,7 +3,6 @@ from service.openAI import router as openAi_router
 from fastapi.middleware.cors import CORSMiddleware
 
 
-
 app = FastAPI()
 router = APIRouter()
 
