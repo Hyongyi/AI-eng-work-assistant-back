@@ -1,5 +1,5 @@
 import os
-from groq import Groq
+from openai import OpenAI
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import config as config
@@ -15,9 +15,9 @@ class PromptRequest(BaseModel):
     promptTemplate: str
     sentence: str
 
-# Groq 클라이언트 초기화
-client = Groq(
-    api_key=config.API_KEY
+# Chatgpt 클라이언트 초기화
+client = OpenAI(
+    api_key=config.LLM_API_KEY,
 )
 
 
@@ -29,38 +29,21 @@ summary_template = "당신은 영어 선생님으로 당신의 직무는 영어�
 
 translate_template = "당신 전문적인 영어 번역가로 당신의 직무는 영어를 올바르게 번역해주는 것입니다. 당신은 번역을 댓가로 돈을 받기 때문에 정확하고 올바르게 영어를 번역해주어야 합니다. 학생이 영어로 된 문장 혹은 문단을 제시하면 당신은 이 문장을 번역해주어야 합니다. 번역은 정확해야 하고 내용이 누락되면 안됩니다. 다음은 고객이 당신에게 요청하는 내용입니다.\n {sentence} \n 다음 내용을 분석한 뒤, 한국어로 번역하여 전달해주세요. 문장은 끊어지지 않고 전체적으로 이어지게 만들어주세요."
 
-
-# @router.post("/callAI")
-# async def groq_api(request: PromptRequest):
-#     try:
-#         prompt_template = prompt_format(prompt=description_template, sentence=request.sentence)
-#         response_content = call_Groq_api(prompt_template)  # API 호출
-#         return {"response": response_content}  # 전체 응답을 문자열로 반환
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))  # 예외 발생 시 오류 반환# 예외 발생 시 오류 반환
-
-
-
-# def call_Groq_api(prompt):
-#     response = client.chat.completions.create(
-#         messages=[
-#             {
-#                 "role": "user",
-#                 "content": prompt,
-#             }
-#         ],
-#         model=config.LLM_MODEL,
-#     )
-    
-    
-#     return response.choices[0].message.content
-
-# def prompt_format(prompt, sentence):
-#     prompt_template = prompt.format(sentence=sentence)
-#     return call_Groq_api(prompt_template)
+eng_word_template = "영한사전을 만들려고 하는데 영어단어를 1개만 json형태로 영어단어와 뜻, 발음기호 예문을 만들어줘. 출력형태는 다음을 참고해줘. 여기서 영어단어는 대학생 이상의 성인들이 사용할만한 단어를 골라줘. {'word': '', 'pronunciation': '', 'definition': '', 'translation':'','examples': ''} " 
 
 @router.post("/callAI")
-async def groq_api(request: PromptRequest):
+def groq_api(request: PromptRequest):
+    if (request.promptTemplate == 'eng_word_template'):
+        templateName = eng_word_template
+    prompt_template = prompt_format(prompt=templateName, sentence=request.sentence)
+    
+    response = call_chat_api(prompt_template)
+    
+    return response
+
+
+@router.post("/callAIStreaming")
+async def call_ai_streaming(request: PromptRequest):
     try:
         if (request.promptTemplate == 'correct_grammar_template'):
             templateName = correct_grammar_template
@@ -68,11 +51,12 @@ async def groq_api(request: PromptRequest):
             templateName = translate_template
         elif (request.promptTemplate == 'summary_template'):
             templateName = summary_template
-            
+
+           
         prompt_template = prompt_format(prompt=templateName, sentence=request.sentence)
         
         async def event_stream() -> AsyncIterator[str]:
-            async for chunk in call_Groq_api(prompt_template):
+            async for chunk in call_chat_api_streaming(prompt_template):
                 yield chunk
         
         return StreamingResponse(event_stream(), media_type="text/event-stream")
@@ -80,8 +64,8 @@ async def groq_api(request: PromptRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-async def call_Groq_api(prompt: str) -> AsyncIterator[str]:
-    response = client.chat.completions.create(
+async def call_chat_api_streaming(prompt: str) -> AsyncIterator[str]:
+    chat_completion = client.chat.completions.create(
         messages=[
             {
                 "role": "user",
@@ -90,17 +74,35 @@ async def call_Groq_api(prompt: str) -> AsyncIterator[str]:
         ],
         model=config.LLM_MODEL,
     )
-
-    content = response.choices[0].message.content
+    content = chat_completion.choices[0].message.content
     
     # 결과를 청크로 나누기 (공백 및 줄 바꿈 기준으로)
     chunks = re.split(r'(\s+)', content)  # 공백 및 줄 바꿈을 기준으로 분리
     
     for chunk in chunks:
-        if chunk:  # 비어 있지 않은 청크만 처리
+        if chunk: 
             await asyncio.sleep(0.01)  # 비동기 대기 (선택사항)
             yield chunk
 
 def prompt_format(prompt: str, sentence: str) -> str:
     # 문장에 맞게 프롬프트를 형식화
-    return prompt.format(sentence=sentence)
+    if(sentence == ''):
+        return prompt
+    else:
+        return prompt.format(sentence=sentence)
+    
+    
+def call_chat_api(prompt: str) -> AsyncIterator[str]:
+    chat_completion = client.chat.completions.create(
+        messages=[
+            {
+                "role": "user",
+                "content": prompt,
+            }
+        ],
+        model=config.LLM_MODEL,
+    )
+    content = chat_completion.choices[0].message.content
+    
+    return content
+    

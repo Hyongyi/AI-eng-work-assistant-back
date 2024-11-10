@@ -1,11 +1,13 @@
 from fastapi import FastAPI, APIRouter
 from service.openAI import router as openAi_router
+from service.words import router as words_router
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 router = APIRouter()
 
 app.include_router(openAi_router, tags=["openAi"])
+app.include_router(words_router, tags=["words"])
 
 # CORS 설정
 app.add_middleware(
