@@ -6,8 +6,9 @@ import config as config
 from fastapi.responses import StreamingResponse
 from typing import AsyncIterator
 import asyncio
+from service.words import get_random_word 
 import re
-
+import json
 
 router = APIRouter()
 
@@ -29,16 +30,17 @@ summary_template = "당신은 영어 선생님으로 당신의 직무는 영어�
 
 translate_template = "당신 전문적인 영어 번역가로 당신의 직무는 영어를 올바르게 번역해주는 것입니다. 당신은 번역을 댓가로 돈을 받기 때문에 정확하고 올바르게 영어를 번역해주어야 합니다. 학생이 영어로 된 문장 혹은 문단을 제시하면 당신은 이 문장을 번역해주어야 합니다. 번역은 정확해야 하고 내용이 누락되면 안됩니다. 다음은 고객이 당신에게 요청하는 내용입니다.\n {sentence} \n 다음 내용을 분석한 뒤, 한국어로 번역하여 전달해주세요. 문장은 끊어지지 않고 전체적으로 이어지게 만들어주세요."
 
-eng_word_template = "영한사전을 만들려고 하는데 영어단어를 1개만 json형태로 영어단어와 뜻, 발음기호 예문을 만들어줘. 출력형태는 다음을 참고해줘. 여기서 영어단어는 대학생 이상의 성인들이 사용할만한 단어를 골라줘. {'word': '', 'pronunciation': '', 'definition': '', 'translation':'','examples': ''} " 
+eng_word_template = "영한사전을 만들려고 하는데 주어진 영어단어를 json형태로 영어단어와 뜻, 발음기호 예문을 만들어주세요. 주어진 단어는 {sentence}입니다.  출력형태는 다음을 참고해주세요. 답변의 키는 word, pronunciation, definition, translation, examples를 가지며 해당 키의 값은 무조건 string입니다." 
 
 @router.post("/callAI")
 def groq_api(request: PromptRequest):
+    word = get_random_word()
     if (request.promptTemplate == 'eng_word_template'):
         templateName = eng_word_template
-    prompt_template = prompt_format(prompt=templateName, sentence=request.sentence)
+    prompt_template = prompt_format(prompt=templateName, sentence=word)
     
     response = call_chat_api(prompt_template)
-    
+    response = json.loads(response)
     return response
 
 

@@ -9,15 +9,18 @@ url = config.WORD_API_URL
 
 
 def get_random_word():
-    try:
-        response = requests.get('https://random-word-api.herokuapp.com/word')
-        if response.status_code == 200:
-            word = response.json()[0]  # 첫 번째 단어를 가져옴
-            print(word)
-            return word
-    except Exception as e:
-        print(f"오류 발생: {e}")
-        return None
+
+    url = "https://wordsapiv1.p.rapidapi.com/words/"
+
+    querystring = {"random":"true"}
+
+    headers = {
+        "x-rapidapi-key": "067d58673cmsh05e814e4763711dp1dd7bajsn28558bd8fa39",
+        "x-rapidapi-host": "wordsapiv1.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers, params=querystring)
+    return response.json()['word']
     
 @router.post("/getEngWord")  
 def get_word_info():
@@ -33,7 +36,4 @@ def get_word_info():
 
 	response = requests.get(url, headers=headers)
 
-	
- 
- 
 	return response.text
