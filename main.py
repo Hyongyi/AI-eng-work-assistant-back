@@ -6,7 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 router = APIRouter()
 
-
 app.include_router(openAi_router, tags=["openAi"])
 app.include_router(words_router, tags=["words"])
 
