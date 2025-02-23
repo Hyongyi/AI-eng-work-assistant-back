@@ -48,6 +48,34 @@
 
 ---
 
+⚡ 기동 방법
+
+🔹 Backend 실행
+
+```
+//폴더로 이동
+cd AI-eng-work-assistant-back
+
+//가상환경 생성
+conda create -n AI-eng-work-assistant
+
+//가상환경 기동
+conda activate AI-eng-work-assistant
+
+// 관련 라이브러리 설치
+pip install -r requirements.txt
+
+//기동
+uvicorn main:app --reload
+```
+
+✅ Backend는 FastAPI를 사용하여 실행
+
+✅ uvicorn을 사용하여 백엔드 서버 기동 후 http://localhost:8000에서 API 테스트 가능
+
+✅ 정상 작동을 위해서는 AI-eng-work-assistant-front 기동 필요
+
+
 ## **📅 프로젝트 일정**
 
 ### **🔹 9월 (기획 & 설계)**
